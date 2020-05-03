@@ -4,7 +4,7 @@
 module FluidSimulationUtils where
 
 import qualified Data.Array.Repa as R
-import FluidCube
+import FluidSquare
 import Control.Monad (mapM)
 
 -- Tam jest inaczej niż myślałem
