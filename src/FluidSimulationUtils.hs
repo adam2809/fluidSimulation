@@ -28,7 +28,8 @@ else
 
 
 diffApprox :: (R.Source r Double) => R.Array r R.DIM2 Double -> Int -> Double -> R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
-diffApprox org dt diff arr = R.traverse arr id (\src i -> let sumNeighs = sum $ map (\j -> arr R.! j) (neighbors (n-1) i) in ((org R.! i) + a*sumNeighs)/(1+4*a)) where
+diffApprox org dt diff arr = R.traverse arr id (\src i -> let sumNeighs = sum $ map (\j -> arr R.! j) (neighbors (n-1) i) in
+    ((org R.! i) + a*sumNeighs)/(1+4*a)) where
     (R.Z R.:. n R.:. _) = R.extent arr
     a = (fromIntegral dt)*diff*(fromIntegral n)^^2
 
