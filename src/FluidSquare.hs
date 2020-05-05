@@ -5,8 +5,8 @@ import qualified Data.Array.Repa as R
 data FluidSquare = FS {
     size      :: Int,
     timestep  :: Int,
-    diffusion :: Int,
-    viscosity :: Int,
+    diffusion :: Double,
+    viscosity :: Double,
 
     density   :: R.Array R.U R.DIM2 Double,
 
@@ -15,7 +15,7 @@ data FluidSquare = FS {
 } deriving Show
 
 
-make :: Int -> Int -> Int -> Int -> [Double] -> FluidSquare
+make :: Int -> Int -> Double -> Double -> [Double] -> FluidSquare
 make s ts diff visc xs = FS {
     size = s,
     timestep = ts,
@@ -31,11 +31,11 @@ make s ts diff visc xs = FS {
     shape = (R.Z R.:. s R.:. s)
 
 
-makeZeros :: Int -> Int -> Int -> Int -> FluidSquare
+makeZeros :: Int -> Int -> Double -> Double -> FluidSquare
 makeZeros s ts diff visc = make s ts diff visc (replicate (s^2) 0)
 
 
-makeConsecutive :: Int -> Int -> Int -> Int -> FluidSquare
+makeConsecutive :: Int -> Int -> Double -> Double -> FluidSquare
 makeConsecutive s ts diff visc = make s ts diff visc ([1 .. ((fromIntegral s)^^2)] :: [Double])
 
-testFs = makeConsecutive 3 1 1 1
+testFs = makeConsecutive 3 1 (1 :: Double) (1 :: Double)
