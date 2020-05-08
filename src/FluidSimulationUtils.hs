@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module FluidSimulationUtils where
 
@@ -9,16 +10,30 @@ import Data.Array.Repa.Shape (shapeOfList)
 import FluidSquare
 import Control.Monad (mapM)
 
+
+stepDensity :: (R.Source r Double) => R.Array r R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double
+stepDensity arr dt diff = diffuse arr dt diff
+
 -- TODO The definition below is a placeholder
-setAllBounds :: (R.Source r Double) => R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setAllBounds = setXBound
-
-
 setXBound :: (R.Source r Double) => R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setXBound arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if
+setXBound = setCorners . setBound
+
+
+setYBound :: (R.Source r Double) => R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
+setYBound = setCorners . R.transpose . setBound . R.transpose
+
+
+setDensBound :: (R.Source r Double) => R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
+setDensBound = setCorners . setXBound . setXBound
+
+
+setBound :: (R.Source r Double) => R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
+setBound arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if
     | x == 0 -> negate $ src (R.Z R.:. 1 R.:. y)
     | x == n-1 -> negate $ src (R.Z R.:. (n-2) R.:. y)
-    | otherwise -> 0) where
+    | y == 0 -> src (R.Z R.:. x R.:. 1)
+    | y == n-1 -> src (R.Z R.:. x R.:. (n-2))
+    | otherwise -> src (R.Z R.:. x R.:. y)) where
         (R.Z R.:. n R.:. _) = R.extent arr
 
 setCorners :: (R.Source r Double) => R.Array r R.DIM2 Double -> R.Array R.D R.DIM2 Double
@@ -37,8 +52,8 @@ diffAccuracy = 20
 -- The second parameter of the first argument should be r (with constraint that
 --  r is the array type) instead of R.D but types don't match up otherwise so
 -- leaving this to fix later
-diffuse :: R.Array R.D R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double
-diffuse arr dt diff = foldr (\_ accum -> setAllBounds $ diffApproxArgs accum) arr [1..diffAccuracy]
+diffuse ::  (R.Source r Double) => R.Array r R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double
+diffuse arr dt diff = foldr (\_ (accum :: R.Array R.D R.DIM2 Double) -> setDensBound $ diffApproxArgs accum) (R.delay arr) [1..diffAccuracy]
     where
         diffApproxArgs = diffApprox arr dt diff
 
