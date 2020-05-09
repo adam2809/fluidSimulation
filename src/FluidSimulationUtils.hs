@@ -9,6 +9,7 @@ import qualified Data.Array.Repa as R
 import Data.Array.Repa.Shape (shapeOfList)
 import FluidSquare
 import Control.Monad (mapM)
+import Debug.Trace
 
 
 stepDensity :: R.Array R.D R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double
@@ -24,7 +25,7 @@ setYBound = setCorners . R.transpose . setBound . R.transpose
 
 
 setDensBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setDensBound = setCorners . setXBound . setXBound
+setDensBound = setCorners
 
 
 setBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
@@ -38,8 +39,8 @@ setBound arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if
 
 setCorners :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
 setCorners arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if [x,y] `elem` cornerIndicies then
-    let [x',y'] = map (\coord -> if coord == 0 then 1 else n-1) [x,y] in
-        ((arr R.! (R.Z R.:. x' R.:. y)) + (arr R.! (R.Z R.:. x R.:. y'))) / 2
+    let [x',y'] = map (\coord -> if coord == 0 then 1 else n-2) [x,y] in
+        trace (show (arr R.! (R.Z R.:. x' R.:. y)) ++ "\t" ++ show (arr R.! (R.Z R.:. x R.:. y')) ++ "\t" ++ show (x,y)) $ ((arr R.! (R.Z R.:. x' R.:. y)) + (arr R.! (R.Z R.:. x R.:. y'))) / 2.0
 else
     arr R.! (R.Z R.:. x R.:. y)) where
         (R.Z R.:. n R.:. _) = R.extent arr
@@ -68,7 +69,10 @@ neighbors :: Int -> (R.Z R.:. Int) R.:. Int -> [(R.Z R.:. Int) R.:. Int]
 neighbors maxIndex (R.Z R.:. x R.:. y) = map shapeOfList (filter invalid [[x+1,y],[x-1,y],[x,y+1],[x-1,y]]) where
     invalid = \[a,b] -> (a >= 0) && (a <= maxIndex) && (b >= 0) && (b <= maxIndex)
 
--- Velo test stuff
+-- Velo test stuff (old not compiling)
 -- m=(R.computeP $ setXBound $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)
 -- t=(R.computeP $ setCorners $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)
--- y=(R.computeP $ setCorners $ setXBound $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)
+-- y=(R.computeP $ setCorners $ setXBound $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)\
+
+-- Dens test stuff
+boundSetting = (R.computeP $ setDensBound $ R.delay $ density testFs) :: IO(R.Array R.U R.DIM2 Double)

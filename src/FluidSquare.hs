@@ -38,4 +38,4 @@ makeZeros s ts diff visc = make s ts diff visc (replicate (s^2) 0)
 makeConsecutive :: Int -> Int -> Double -> Double -> FluidSquare
 makeConsecutive s ts diff visc = make s ts diff visc ([1 .. ((fromIntegral s)^^2)] :: [Double])
 
-testFs = makeConsecutive 3 1 (1 :: Double) (1 :: Double)
+testFs = makeConsecutive 4 1 (1 :: Double) (1 :: Double)
