@@ -39,3 +39,5 @@ makeConsecutive :: Int -> Int -> Double -> Double -> FluidSquare
 makeConsecutive s ts diff visc = make s ts diff visc ([1 .. ((fromIntegral s)^^2)] :: [Double])
 
 testFs = makeConsecutive 4 1 (1 :: Double) (1 :: Double)
+
+testDiff = make 5 1 2 3 $ (replicate 12 0) ++ [1] ++ (replicate 12 0)

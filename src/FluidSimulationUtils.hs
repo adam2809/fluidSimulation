@@ -6,14 +6,14 @@
 module FluidSimulationUtils where
 
 import qualified Data.Array.Repa as R
-import Data.Array.Repa.Shape (shapeOfList)
+import Data.Array.Repa.Shape (shapeOfList,listOfShape)
 import FluidSquare
 import Control.Monad (mapM)
 import Debug.Trace
 
 
 stepDensity :: R.Array R.D R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double
-stepDensity arr dt diff = diffuse arr dt diff
+stepDensity arr dt diff = diffuse dt diff arr
 
 -- TODO The definition below is a placeholder
 setXVeloBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
@@ -43,7 +43,7 @@ setBound negX arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if
 setCorners :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
 setCorners arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if [x,y] `elem` cornerIndicies then
     let [x',y'] = map (\coord -> if coord == 0 then 1 else n-2) [x,y] in
-        ((arr R.! (R.Z R.:. x' R.:. y)) + (arr R.! (R.Z R.:. x R.:. y'))) / 2.0
+        ((arr R.! (R.Z R.:. x' R.:. y)) + (arr R.! (R.Z R.:. x R.:. y'))) / 2
 else
     arr R.! (R.Z R.:. x R.:. y)) where
         (R.Z R.:. n R.:. _) = R.extent arr
@@ -52,14 +52,14 @@ else
 
 diffAccuracy = 20
 
--- TODO
--- The second parameter of the first argument should be r (with constraint that
---  r is the array type) instead of R.D but types don't match up otherwise so
--- leaving this to fix later
-diffuse ::  R.Array R.D R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double
-diffuse arr dt diff = foldr (\_ accum -> setDensBound $ diffApproxArgs accum) arr [1..diffAccuracy]
+diffuse ::  Int -> Double -> R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
+diffuse dt diff arr = foldr (\_ accum -> setDensBound $ diffApproxArgs $ showAll accum) arr [1..diffAccuracy]
     where
         diffApproxArgs = diffApprox arr dt diff
+
+
+showAll :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
+showAll arr = R.traverse arr id (\src i -> trace (show (src i) ++ "\tNNNNNNNNN") $ src i)
 
 
 diffApprox :: R.Array R.D R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
@@ -79,3 +79,7 @@ yBoundSetting = (R.computeP $ setYVeloBound $ R.delay $ velocityY testFs) :: IO(
 
 -- Dens test stuff
 densBoundSetting = (R.computeP $ setDensBound $ R.delay $ density testFs) :: IO(R.Array R.U R.DIM2 Double)
+densDiff = (R.computeP $ diffuse (timestep testDiff) (diffusion testDiff) $ R.delay $ density testDiff) :: IO(R.Array R.U R.DIM2 Double)
+densDiffS = (R.computeS $ diffuse (timestep testDiff) (diffusion testDiff) $ R.delay $ density testDiff) :: R.Array R.U R.DIM2 Double
+
+dArgs = diffApprox (R.delay $ density testDiff) (timestep testDiff) (diffusion testDiff)
