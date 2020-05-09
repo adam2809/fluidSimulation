@@ -17,30 +17,33 @@ stepDensity arr dt diff = diffuse arr dt diff
 
 -- TODO The definition below is a placeholder
 setXBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setXBound = setCorners . setBound
+setXBound = setCorners . setBound True
 
 
 setYBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setYBound = setCorners . R.transpose . setBound . R.transpose
+setYBound = setCorners . R.transpose . (setBound True) . R.transpose
 
 
 setDensBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setDensBound = setCorners
+setDensBound = setCorners . setBound False
 
 
-setBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setBound arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if
-    | x == 0 -> negate $ src (R.Z R.:. 1 R.:. y)
-    | x == n-1 -> negate $ src (R.Z R.:. (n-2) R.:. y)
+setBound :: Bool -> R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
+setBound negX arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if
+    | [x,y] `elem` cornerIndicies -> src (R.Z R.:. x R.:. y)
+    | x == 0 -> negOrNot $ src (R.Z R.:. 1 R.:. y)
+    | x == n-1 -> negOrNot $ src (R.Z R.:. (n-2) R.:. y)
     | y == 0 -> src (R.Z R.:. x R.:. 1)
     | y == n-1 -> src (R.Z R.:. x R.:. (n-2))
     | otherwise -> src (R.Z R.:. x R.:. y)) where
+        negOrNot = if negX then negate else id
         (R.Z R.:. n R.:. _) = R.extent arr
+        cornerIndicies = mapM (const [0,n-1]) [1,2]
 
 setCorners :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
 setCorners arr = R.traverse arr id (\src (R.Z R.:. x R.:. y) -> if [x,y] `elem` cornerIndicies then
     let [x',y'] = map (\coord -> if coord == 0 then 1 else n-2) [x,y] in
-        trace (show (arr R.! (R.Z R.:. x' R.:. y)) ++ "\t" ++ show (arr R.! (R.Z R.:. x R.:. y')) ++ "\t" ++ show (x,y)) $ ((arr R.! (R.Z R.:. x' R.:. y)) + (arr R.! (R.Z R.:. x R.:. y'))) / 2.0
+        ((arr R.! (R.Z R.:. x' R.:. y)) + (arr R.! (R.Z R.:. x R.:. y'))) / 2.0
 else
     arr R.! (R.Z R.:. x R.:. y)) where
         (R.Z R.:. n R.:. _) = R.extent arr
