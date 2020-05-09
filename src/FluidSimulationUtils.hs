@@ -49,11 +49,10 @@ else
         (R.Z R.:. n R.:. _) = R.extent arr
         cornerIndicies = mapM (const [0,n-1]) [1,2]
 
-
-diffAccuracy = 20
+diffAccuracy = 7
 
 diffuse ::  Int -> Double -> R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-diffuse dt diff arr = foldr (\_ accum -> setDensBound $ diffApproxArgs $ showAll accum) arr [1..diffAccuracy]
+diffuse dt diff arr = (iterate (\x -> setDensBound $ diffApproxArgs x) arr ) !! diffAccuracy
     where
         diffApproxArgs = diffApprox arr dt diff
 
@@ -79,7 +78,7 @@ yBoundSetting = (R.computeP $ setYVeloBound $ R.delay $ velocityY testFs) :: IO(
 
 -- Dens test stuff
 densBoundSetting = (R.computeP $ setDensBound $ R.delay $ density testFs) :: IO(R.Array R.U R.DIM2 Double)
-densDiff = (R.computeP $ diffuse (timestep testDiff) (diffusion testDiff) $ R.delay $ density testDiff) :: IO(R.Array R.U R.DIM2 Double)
-densDiffS = (R.computeS $ diffuse (timestep testDiff) (diffusion testDiff) $ R.delay $ density testDiff) :: R.Array R.U R.DIM2 Double
+densDiff = (R.computeP $ diffuse (timestep testDiff) (diffusion testDiff) (R.delay $ density testDiff)) :: IO(R.Array R.U R.DIM2 Double)
+densDiffS = (R.computeS $ diffuse (timestep testDiff) (diffusion testDiff) (R.delay $ density testDiff)) :: R.Array R.U R.DIM2 Double
 
 dArgs = diffApprox (R.delay $ density testDiff) (timestep testDiff) (diffusion testDiff)
