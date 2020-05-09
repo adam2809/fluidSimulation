@@ -16,12 +16,12 @@ stepDensity :: R.Array R.D R.DIM2 Double -> Int -> Double -> R.Array R.D R.DIM2 
 stepDensity arr dt diff = diffuse arr dt diff
 
 -- TODO The definition below is a placeholder
-setXBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setXBound = setCorners . setBound True
+setXVeloBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
+setXVeloBound = setCorners . setBound True
 
 
-setYBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
-setYBound = setCorners . R.transpose . (setBound True) . R.transpose
+setYVeloBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
+setYVeloBound = setCorners . R.transpose . (setBound True) . R.transpose
 
 
 setDensBound :: R.Array R.D R.DIM2 Double -> R.Array R.D R.DIM2 Double
@@ -72,10 +72,10 @@ neighbors :: Int -> (R.Z R.:. Int) R.:. Int -> [(R.Z R.:. Int) R.:. Int]
 neighbors maxIndex (R.Z R.:. x R.:. y) = map shapeOfList (filter invalid [[x+1,y],[x-1,y],[x,y+1],[x-1,y]]) where
     invalid = \[a,b] -> (a >= 0) && (a <= maxIndex) && (b >= 0) && (b <= maxIndex)
 
--- Velo test stuff (old not compiling)
--- m=(R.computeP $ setXBound $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)
--- t=(R.computeP $ setCorners $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)
--- y=(R.computeP $ setCorners $ setXBound $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)\
+-- Velo test stuff
+xBoundSetting = (R.computeP $ setXVeloBound $ R.delay $ velocityX testFs) :: IO(R.Array R.U R.DIM2 Double)
+yBoundSetting = (R.computeP $ setYVeloBound $ R.delay $ velocityY testFs) :: IO(R.Array R.U R.DIM2 Double)
+
 
 -- Dens test stuff
-boundSetting = (R.computeP $ setDensBound $ R.delay $ density testFs) :: IO(R.Array R.U R.DIM2 Double)
+densBoundSetting = (R.computeP $ setDensBound $ R.delay $ density testFs) :: IO(R.Array R.U R.DIM2 Double)
